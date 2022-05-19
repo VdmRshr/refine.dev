@@ -35,37 +35,12 @@ export const ProductList: React.FC<IResourceComponentsProps> = () => {
       ],
     },
     liveMode:"auto",
-    liveParams:{onLiveEvent: (event: any) => {
-        console.log('event0', event)
-        return event
-      }
-    }
-
+    onLiveEvent: (event: any) => {
+      console.log("event0", event);
+      return event;
+    },
   });
 
-  const {data} = useList({
-    onLiveEvent: (event) => {
-      console.log('event', event)
-      return event
-    },
-    resource: 'products',
-    metaData: {
-      fields: [
-        "id",
-        'name'
-      ],
-      liveMode: "auto"
-    }
-  });
-  console.log('useList', data)
-  useSubscription({
-    channel: "products",
-    onLiveEvent: (event) => {
-      console.log('event2', event)
-      return event
-    },
-    params:{}
-  });
 
   return (
     <Table {...tableProps} rowKey="id">

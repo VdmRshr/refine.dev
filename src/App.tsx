@@ -1,7 +1,9 @@
-import {Refine} from "@pankod/refine-core";
+import {DataProvider, Refine} from "@pankod/refine-core";
 import {Layout, ReadyPage, notificationProvider, ErrorComponent} from "@pankod/refine-antd";
 import routerProvider from "@pankod/refine-react-router-v6";
 import {GraphQLClient} from "graphql-request";
+import * as gql from "gql-query-builder";
+
 
 
 import "@pankod/refine-antd/dist/styles.min.css";
@@ -19,7 +21,7 @@ import {PostCreate, PostEdit, PostList, PostShow} from "./pages/posts";
 
 const API_URL = "https://nhg.hasura.app/v1/graphql";
 
-const AblyKey = 'AGKk_A.-YDAPQ:nKDFb0xKX-jW1ooiAjY4WNCea9JFxZlKSNf2tL0Rq2A'
+const AblyKey = 'syVQsA.ofJCQg:GvXwhLsJhjMo4onQ_zQKjvb9biBIXMiDd7qLo9ZVA38'
 
 export const ablyClient = new Ably.Realtime(AblyKey);
 
@@ -38,13 +40,58 @@ const client = new GraphQLClient(API_URL, {
 //   },
 // });
 
-const gqlDataProvider = dataProvider(client);
+ const gqlDataProvider = dataProvider(client);
+
+export const myDataProvider = (client: GraphQLClient): DataProvider => {
+  return {
+    ...gqlDataProvider,
+    deleteOne: async ({resource, id, metaData}) => {
+      const operation = metaData?.operation ?? resource;
+
+      const deleteOperation = `delete_${operation}_by_pk`;
+
+      const {query, variables} = gql.mutation({
+        operation: deleteOperation,
+        variables: {
+          id: {value: id, type: "bigint", required: true},
+          ...metaData?.variables,
+        },
+        fields: metaData?.fields ?? ["id"],
+      });
+
+      const response = await client.request(query, variables);
+
+      return {
+        data: response[deleteOperation],
+      };
+    },
+    getOne: async ({resource, id, metaData}) => {
+      const operation = `${metaData?.operation ?? resource}_by_pk`;
+
+      const { query, variables } = gql.query({
+        operation,
+        variables: {
+          id: { value: id, type: "bigint", required: true },
+          ...metaData?.variables,
+        },
+        fields: metaData?.fields,
+      });
+
+      const response = await client.request(query, variables);
+
+      return {
+        data: response[operation],
+      };
+    },
+  };
+}
 
 const App: React.FC = () => {
   return (
     <Refine
       routerProvider={routerProvider}
-      dataProvider={gqlDataProvider}
+
+      dataProvider={myDataProvider(client)}
       liveProvider={liveProvider(ablyClient)}
       resources={
         [

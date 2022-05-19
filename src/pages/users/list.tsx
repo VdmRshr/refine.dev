@@ -9,6 +9,7 @@ import {
 } from '@pankod/refine-antd'
 
 import React from 'react'
+import {myDataProvider} from "../../App";
 
 interface IUser {
   created_at: string
@@ -37,15 +38,9 @@ export const UserList: React.FC<IResourceComponentsProps> = () => {
         'name'
       ],
     },
+    liveMode:"auto",
+
   });
-  const { mutate } = useDelete();
-  const a =()=>{
-    mutate({
-      resource: "users",
-      id: 2,
-      mutationMode: "optimistic",
-    });
-  }
 
 
   return (
@@ -79,7 +74,6 @@ export const UserList: React.FC<IResourceComponentsProps> = () => {
               recordItemId={record.id}
 
             />
-            <button onClick={a}>_del</button>
           </Space>
         )}
       />
